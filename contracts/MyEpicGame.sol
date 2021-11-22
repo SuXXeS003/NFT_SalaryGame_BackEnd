@@ -96,7 +96,7 @@ contract MyEpicGame is ERC721 {
                         '", "description": "This is an NFT that lets people play in the game Get More Money", "image": "',
                         charAttributes.imageURI,
                         '", "attributes": [ { "trait_type": "Arguments", "value": ',strArguments,', "max_arguments":',strMaxArguments,'}, { "trait_type": "Persuasion", "value": ',
-                        strPersuasion,'}]}'
+                        strPersuasion,'} ]}'
                     )
                 )
             )
