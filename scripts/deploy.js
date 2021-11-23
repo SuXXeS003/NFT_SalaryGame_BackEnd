@@ -6,31 +6,24 @@ const main = async () => {
         "https://images.pexels.com/photos/5414000/pexels-photo-5414000.jpeg",
         "https://images.pexels.com/photos/2382665/pexels-photo-2382665.jpeg"],
         [100, 200, 300],
-        [100, 50, 25]
+        [100, 50, 25],
+        "Big Boss",
+        "https://images.pexels.com/photos/3760790/pexels-photo-3760790.jpeg",
+        10000,
+        50
     );
-
     await gameContract.deployed();
     console.log("Contract deployed to:", gameContract.address);
 
     let txn;
 
-    txn = await gameContract.mintCharacterNFT(0);
-    await txn.wait();
-    console.log("Minted NFT #1");
-
-    txn = await gameContract.mintCharacterNFT(1);
-    await txn.wait();
-    console.log("Minted NFT #2");
-
     txn = await gameContract.mintCharacterNFT(2);
     await txn.wait();
-    console.log("Minted NFT #3");
 
-    txn = await gameContract.mintCharacterNFT(1);
+    txn = await gameContract.requestSalaryIncrease();
     await txn.wait();
-    console.log("Minted NFT #4");
 
-    console.log("Done deploying and minting!");
+    let returnedTokenUri = await gameContract.tokenURI(1);
 };
 
 const runMain = async () => {

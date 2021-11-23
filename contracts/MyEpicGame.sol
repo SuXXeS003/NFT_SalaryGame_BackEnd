@@ -23,10 +23,22 @@ contract MyEpicGame is ERC721 {
         uint persuasion;
     }
 
+    struct BigBoss {
+        string name;
+        string imageURI;
+        uint ignorance;
+        uint maxIgnorance;
+        uint humiliation;
+    }
+
+    
+
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
     CharacterAttributes[] defaultCharacters;
+
+    BigBoss public bigBoss;
 
     // We create a mapping from the nft's tokenId => that NFTs attributes.
     mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
@@ -40,10 +52,24 @@ contract MyEpicGame is ERC721 {
         string[] memory characterNames,
         string[] memory characterImageURIs,
         uint[] memory characterArguments,
-        uint[] memory characterPersuasion
+        uint[] memory characterPersuasion,
+        string memory bossName,
+        string memory bossImageURI,
+        uint bossIgnorance,
+        uint bossHumiliation
     ) 
         ERC721("Worker","WORKER")
     {
+        bigBoss = BigBoss({
+            name: bossName,
+            imageURI: bossImageURI,
+            ignorance: bossIgnorance,
+            maxIgnorance: bossIgnorance,
+            humiliation: bossHumiliation
+        });
+        
+        console.log("Done initializing boss %s", bigBoss.name);
+
         for(uint i = 0; i < characterNames.length;i += 1) {
             defaultCharacters.push(CharacterAttributes({
                 characterIndex: i,
@@ -108,5 +134,38 @@ contract MyEpicGame is ERC721 {
 
         return output;
     }
+
+    function requestSalaryIncrease() public {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        console.log("\nPlayer with character %s is about to request.", player.name);
+        console.log("%s is listening", bigBoss.name);
+
+        require (
+            player.arguments > 0,
+            "Error: character must have arguments to request salary increasse."
+        );
+
+        require (
+            bigBoss.ignorance > 0,
+            "Error: boss must have ignorance."
+        );
+
+        if (bigBoss.ignorance < player.persuasion) {
+            bigBoss.ignorance = 0;
+        } else {
+            bigBoss.ignorance = bigBoss.ignorance - player.persuasion;
+        }
+
+        if (player.arguments < bigBoss.humiliation) {
+            player.arguments = 0;
+        } else {
+            player.arguments = player.arguments - bigBoss.humiliation;
+        }
+
+        console.log("Player attacked boss. New boss hp: %s", bigBoss.ignorance);
+        console.log("Boss attacked player. New player hp: %s\n", player.arguments);
+    }
+
 }
 

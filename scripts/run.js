@@ -6,7 +6,11 @@ const main = async () => {
         "https://images.pexels.com/photos/5414000/pexels-photo-5414000.jpeg",
         "https://images.pexels.com/photos/2382665/pexels-photo-2382665.jpeg"],
         [100, 200, 300],
-        [100, 50, 25]
+        [100, 50, 25],
+        "Big Boss",
+        "https://images.pexels.com/photos/3760790/pexels-photo-3760790.jpeg",
+        10000,
+        50
     );
     await gameContract.deployed();
     console.log("Contract deployed to:", gameContract.address);
@@ -16,8 +20,10 @@ const main = async () => {
     txn = await gameContract.mintCharacterNFT(2);
     await txn.wait();
 
+    txn = await gameContract.requestSalaryIncrease();
+    await txn.wait();
+
     let returnedTokenUri = await gameContract.tokenURI(1);
-    console.log("Token URI:", returnedTokenUri);
 };
 
 const runMain = async () => {
