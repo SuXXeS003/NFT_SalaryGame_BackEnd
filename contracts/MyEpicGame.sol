@@ -18,17 +18,17 @@ contract MyEpicGame is ERC721 {
         uint characterIndex;
         string name;
         string imageURI;
-        uint arguments;
-        uint maxArguments;
-        uint persuasion;
+        uint hp;
+        uint maxHp;
+        uint attack;
     }
 
     struct BigBoss {
         string name;
         string imageURI;
-        uint ignorance;
-        uint maxIgnorance;
-        uint humiliation;
+        uint hp;
+        uint maxHp;
+        uint attack;
     }
 
     
@@ -66,9 +66,9 @@ contract MyEpicGame is ERC721 {
         bigBoss = BigBoss({
             name: bossName,
             imageURI: bossImageURI,
-            ignorance: bossIgnorance,
-            maxIgnorance: bossIgnorance,
-            humiliation: bossHumiliation
+            hp: bossIgnorance,
+            maxHp: bossIgnorance,
+            attack: bossHumiliation
         });
         
         console.log("Done initializing boss %s", bigBoss.name);
@@ -78,13 +78,13 @@ contract MyEpicGame is ERC721 {
                 characterIndex: i,
                 name: characterNames[i],
                 imageURI: characterImageURIs[i],
-                arguments: characterArguments[i],
-                maxArguments: characterArguments[i],
-                persuasion: characterPersuasion[i]
+                hp: characterArguments[i],
+                maxHp: characterArguments[i],
+                attack: characterPersuasion[i]
             }));
 
             CharacterAttributes memory c = defaultCharacters[i];
-            console.log("Done initializing %s with %s Arguments, img %s", c.name, c.arguments, c.imageURI);
+            console.log("Done initializing %s with %s Arguments, img %s", c.name, c.hp, c.imageURI);
         }
         _tokenIds.increment();
     }
@@ -97,9 +97,9 @@ contract MyEpicGame is ERC721 {
             characterIndex: _characterIndex,
             name: defaultCharacters[_characterIndex].name,
             imageURI: defaultCharacters[_characterIndex].imageURI,
-            arguments: defaultCharacters[_characterIndex].arguments,
-            maxArguments: defaultCharacters[_characterIndex].maxArguments,
-            persuasion: defaultCharacters[_characterIndex].persuasion
+            hp: defaultCharacters[_characterIndex].hp,
+            maxHp: defaultCharacters[_characterIndex].maxHp,
+            attack: defaultCharacters[_characterIndex].attack
         });
 
         console.log("Minted NFT with tokenId %s and characterIndex %s", newItemId, _characterIndex);
@@ -111,9 +111,9 @@ contract MyEpicGame is ERC721 {
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         CharacterAttributes memory charAttributes = nftHolderAttributes[_tokenId];
 
-        string memory strArguments = Strings.toString(charAttributes.arguments);
-        string memory strMaxArguments = Strings.toString(charAttributes.maxArguments);
-        string memory strPersuasion = Strings.toString(charAttributes.persuasion);
+        string memory strArguments = Strings.toString(charAttributes.hp);
+        string memory strMaxArguments = Strings.toString(charAttributes.maxHp);
+        string memory strPersuasion = Strings.toString(charAttributes.attack);
 
         string memory json = Base64.encode(
             bytes(
@@ -146,31 +146,31 @@ contract MyEpicGame is ERC721 {
         console.log("%s is listening", bigBoss.name);
 
         require (
-            player.arguments > 0,
+            player.hp > 0,
             "Error: character must have arguments to request salary increasse."
         );
 
         require (
-            bigBoss.ignorance > 0,
+            bigBoss.hp > 0,
             "Error: boss must have ignorance."
         );
 
-        if (bigBoss.ignorance < player.persuasion) {
-            bigBoss.ignorance = 0;
+        if (bigBoss.hp < player.attack) {
+            bigBoss.hp = 0;
         } else {
-            bigBoss.ignorance = bigBoss.ignorance - player.persuasion;
+            bigBoss.hp = bigBoss.hp - player.attack;
         }
 
-        if (player.arguments < bigBoss.humiliation) {
-            player.arguments = 0;
+        if (player.hp < bigBoss.attack) {
+            player.hp = 0;
         } else {
-            player.arguments = player.arguments - bigBoss.humiliation;
+            player.hp = player.hp - bigBoss.attack;
         }
 
-        emit AttackComplete(bigBoss.ignorance, player.arguments);
+        emit AttackComplete(bigBoss.hp, player.hp);
         
-        console.log("Player attacked boss. New boss hp: %s", bigBoss.ignorance);
-        console.log("Boss attacked player. New player hp: %s\n", player.arguments);
+        console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
+        console.log("Boss attacked player. New player hp: %s\n", player.hp);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
