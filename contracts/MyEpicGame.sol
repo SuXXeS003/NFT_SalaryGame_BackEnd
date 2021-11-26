@@ -120,7 +120,7 @@ contract MyEpicGame is ERC721 {
                         charAttributes.name,
                         ' -- NFT #: ',
                         Strings.toString(_tokenId),
-                        '", "description": "Try to get more Money", "image": "ipfs://',
+                        '", "description": "Try to get more Money", "image": "',
                         charAttributes.imageURI,
                         '", "attributes": [ { "trait_type": "Arguments", "value": ',strArguments,', "max_value":',strMaxArguments,'}, { "trait_type": "Persuasion", "value": ',
                         strPersuasion,'} ]}'
@@ -191,7 +191,13 @@ contract MyEpicGame is ERC721 {
         return bigBoss;
     }
 
-
+    function reviveCharacter() public {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        
+        require(player.hp == 0, "Revive only possible if you are dead");
+        player.hp = player.maxHp;
+    }
 
 }
 
