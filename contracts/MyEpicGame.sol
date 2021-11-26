@@ -47,6 +47,7 @@ contract MyEpicGame is ERC721 {
 
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp);
+    event PlayerRevived(address sender, uint tokenId);
 
     constructor(
         string[] memory characterNames,
@@ -197,6 +198,8 @@ contract MyEpicGame is ERC721 {
         
         require(player.hp == 0, "Revive only possible if you are dead");
         player.hp = player.maxHp;
+
+        emit PlayerRevived(msg.sender, nftTokenIdOfPlayer);
     }
 
 }
