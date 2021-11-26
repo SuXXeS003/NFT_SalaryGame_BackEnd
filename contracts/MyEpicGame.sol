@@ -31,8 +31,6 @@ contract MyEpicGame is ERC721 {
         uint attack;
     }
 
-    
-
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -49,7 +47,6 @@ contract MyEpicGame is ERC721 {
 
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp);
-
 
     constructor(
         string[] memory characterNames,
@@ -123,7 +120,7 @@ contract MyEpicGame is ERC721 {
                         charAttributes.name,
                         ' -- NFT #: ',
                         Strings.toString(_tokenId),
-                        '", "description": "This is an NFT that lets people play in the game Get More Money", "image": "',
+                        '", "description": "Try to get more Money", "image": "ipfs://',
                         charAttributes.imageURI,
                         '", "attributes": [ { "trait_type": "Arguments", "value": ',strArguments,', "max_value":',strMaxArguments,'}, { "trait_type": "Persuasion", "value": ',
                         strPersuasion,'} ]}'
@@ -131,6 +128,8 @@ contract MyEpicGame is ERC721 {
                 )
             )
         );
+
+        console.log('JSON:', json);
 
         string memory output = string(
             abi.encodePacked("data:application/json;base64,", json)

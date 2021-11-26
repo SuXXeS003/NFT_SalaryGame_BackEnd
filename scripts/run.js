@@ -2,13 +2,13 @@ const main = async () => {
     const gameContractFactory = await hre.ethers.getContractFactory('MyEpicGame');
     const gameContract = await gameContractFactory.deploy(
         ["Worker 1", "Worker 2", "Worker 3"],
-        ["https://images.pexels.com/photos/7155779/pexels-photo-7155779.jpeg",
-        "https://images.pexels.com/photos/5414000/pexels-photo-5414000.jpeg",
-        "https://images.pexels.com/photos/2382665/pexels-photo-2382665.jpeg"],
+        ["QmPxTHphqKCfto3m3f2g6KSgGeonC78FTS2VABBndMtG7C",
+        "QmPJ6jV4gcTRcHCfX4absUC3YniSqRzao7pAv5w5ePYwMg",
+        "QmQzujPLr2RMjHEJH6ou9bzhLPC3gcrpN3qFbmtrRjcY5E"],
         [100, 200, 300],
         [100, 50, 25],
         "Big Boss",
-        "https://images.pexels.com/photos/3760790/pexels-photo-3760790.jpeg",
+        "QmZgJXxHdkjALHTgZByUkcf2UE9MqTtjBGHbd6Tr38wve6",
         10000,
         50
     );
