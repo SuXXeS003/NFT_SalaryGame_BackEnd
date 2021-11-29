@@ -14,6 +14,16 @@ import "./libraries/Base64.sol";
 
 contract MyEpicGame is ERC721 {
 
+    enum LifeState {ALIVE, DEAD, WORK}
+
+    string[5] jobStage = ["junior", "advanced", "senior", "professional", "expert"];
+    string[10] jobName = ["trainee","apprentice","temporary jobber","employee","topic responsible","team leader","lower Management","upper Management","director","executive"];
+
+    LifeState constant defaultstate = LifeState.ALIVE;
+    string constant defaultJobStage = "junior";
+    string constant defaultJobName = "trainee";
+    string constant defaultJob = string(abi.encodePacked(defaultJobStage, " ",defaultJobName));
+
     struct CharacterAttributes {
         uint characterIndex;
         string name;
@@ -21,6 +31,8 @@ contract MyEpicGame is ERC721 {
         uint hp;
         uint maxHp;
         uint attack;
+        LifeState lifeState;
+        string jobDescription;
     }
 
     struct BigBoss {
@@ -35,15 +47,13 @@ contract MyEpicGame is ERC721 {
     Counters.Counter private _tokenIds;
 
     CharacterAttributes[] defaultCharacters;
-
     BigBoss public bigBoss;
-
-    // We create a mapping from the nft's tokenId => that NFTs attributes.
-    mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
 
     // A mapping from an address => the NFTs tokenId. Gives me an ez way
     // to store the owner of the NFT and reference it later.
     mapping(address => uint256) public nftHolders;
+    // We create a mapping from the nft's tokenId => that NFTs attributes.
+    mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
 
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp);
@@ -78,12 +88,15 @@ contract MyEpicGame is ERC721 {
                 imageURI: characterImageURIs[i],
                 hp: characterArguments[i],
                 maxHp: characterArguments[i],
-                attack: characterPersuasion[i]
+                attack: characterPersuasion[i],
+                lifeState: defaultstate,
+                jobDescription: defaultJob
             }));
 
             CharacterAttributes memory c = defaultCharacters[i];
-            console.log("Done initializing %s with %s Arguments, img %s", c.name, c.hp, c.imageURI);
+            console.log("Done initializing %s with %s Arguments", c.name, c.hp);
         }
+
         _tokenIds.increment();
     }
 
@@ -97,7 +110,9 @@ contract MyEpicGame is ERC721 {
             imageURI: defaultCharacters[_characterIndex].imageURI,
             hp: defaultCharacters[_characterIndex].hp,
             maxHp: defaultCharacters[_characterIndex].maxHp,
-            attack: defaultCharacters[_characterIndex].attack
+            attack: defaultCharacters[_characterIndex].attack,
+            lifeState: defaultstate,
+            jobDescription: defaultJob
         });
 
         console.log("Minted NFT with tokenId %s and characterIndex %s", newItemId, _characterIndex);
@@ -106,12 +121,20 @@ contract MyEpicGame is ERC721 {
         emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
     }
 
+    function enumToString(LifeState _state) private pure returns (string memory){
+        if(LifeState.ALIVE == _state) return "ALIVE";
+        if(LifeState.WORK == _state) return "WORK";
+        if(LifeState.DEAD == _state) return "DEAD";
+        return "";
+    }
+
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         CharacterAttributes memory charAttributes = nftHolderAttributes[_tokenId];
 
         string memory strArguments = Strings.toString(charAttributes.hp);
         string memory strMaxArguments = Strings.toString(charAttributes.maxHp);
         string memory strPersuasion = Strings.toString(charAttributes.attack);
+        string memory strState = enumToString(charAttributes.lifeState);
 
         string memory json = Base64.encode(
             bytes(
@@ -123,8 +146,17 @@ contract MyEpicGame is ERC721 {
                         Strings.toString(_tokenId),
                         '", "description": "Try to get more Money", "image": "',
                         charAttributes.imageURI,
-                        '", "attributes": [ { "trait_type": "Arguments", "value": ',strArguments,', "max_value":',strMaxArguments,'}, { "trait_type": "Persuasion", "value": ',
-                        strPersuasion,'} ]}'
+                        '", "attributes": [ { "trait_type": "Arguments", "value": ',
+                        strArguments,
+                        ', "max_value":',
+                        strMaxArguments,
+                        '}, { "trait_type": "Persuasion", "value": ',
+                        strPersuasion,
+                        '},{ "trait_type": "Current State", "value": ',
+                        strState,
+                        '},{ "trait_type": "Job title", "value": ',
+                        charAttributes.jobDescription,
+                        '} ]}'
                     )
                 )
             )
@@ -197,6 +229,7 @@ contract MyEpicGame is ERC721 {
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
         
         require(player.hp == 0, "Revive only possible if you are dead");
+
         player.hp = player.maxHp;
 
         emit PlayerRevived(msg.sender, nftTokenIdOfPlayer);
