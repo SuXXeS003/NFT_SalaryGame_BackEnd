@@ -62,6 +62,7 @@ contract MyEpicGame is ERC721 {
     event AttackComplete(uint newBossHp, uint newPlayerHp);
     event PlayerRevived(address sender, uint tokenId);
     event PlayerLevelUp(address sender, uint tokenId);
+    event PlayerDead(address sender, uint256 timestamp);
 
 
     constructor(
@@ -163,9 +164,9 @@ contract MyEpicGame is ERC721 {
                         strMaxArguments,
                         '}, { "trait_type": "Persuasion", "value": ',
                         strPersuasion,
-                        '},{ "trait_type": "Current State", "value": ',
+                        '}, { "trait_type": "Current State", "value": ',
                         strState,
-                        '},{ "trait_type": "Job title", "value": ',
+                        '}, { "trait_type": "Job title", "value": ',
                         charAttributes.jobDescription,
                         '} ]}'
                     )
@@ -199,23 +200,34 @@ contract MyEpicGame is ERC721 {
         );
 
         // Player attacks the Boss
-        if (bigBoss.hp < player.attack) {
+        if (bigBoss.hp <= player.attack) {
             bigBoss.hp = 0;
         } else {
             bigBoss.hp = bigBoss.hp - player.attack;
         }
+        console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
 
         // Boss strikes back
-        if (player.hp < bigBoss.attack) {
+        if (player.hp <= bigBoss.attack) {
             player.hp = 0;
+            player.lifeState = LifeState.DEAD;
+            console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
+            
+            emit PlayerDead(msg.sender, block.timestamp);
+
         } else {
             player.hp = player.hp - bigBoss.attack;
         }
+        console.log("Boss attacked player. New player hp: %s\n", player.hp);
+
+        player.experience = player.experience + 20;
+        console.log('Check if level up is possible...');
+        
+        if (player.experience >= player.maxExperience) {
+            levelUp();
+        }
 
         emit AttackComplete(bigBoss.hp, player.hp);
-        
-        console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
-        console.log("Boss attacked player. New player hp: %s\n", player.hp);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
@@ -242,10 +254,13 @@ contract MyEpicGame is ERC721 {
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
         
         require(player.hp == 0, "Revive only possible if you are dead");
+        console.log('Revive of %s in progress', player.name);
 
         player.hp = player.maxHp;
         player.lifeState = LifeState.ALIVE;
-
+        
+        console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
+        
         emit PlayerRevived(msg.sender, nftTokenIdOfPlayer);
     }
 
@@ -253,7 +268,9 @@ contract MyEpicGame is ERC721 {
         uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
 
-        require(player.experience == player.maxExperience, "Not enough XP to get level up");
+        require(player.experience >= player.maxExperience, "Not enough XP to get level up");
+        console.log('Level up in progress!');
+        console.log('Current level: %s', player.level);
         //reset xp to 0
         player.experience = 0;
         //increase max health
@@ -265,6 +282,10 @@ contract MyEpicGame is ERC721 {
         //calculate new maxXP for next level
         player.maxExperience = calculateNextLevelUp(player.level);
         player.level = player.level +1;
+        
+        console.log('You are now on level %s.', player.level);
+        console.log('Level up done. Need %s XP for next level.', player.maxExperience);
+        console.log('Health is completly restored. Stats increased slightly.');
 
         emit PlayerLevelUp(msg.sender, nftTokenIdOfPlayer);
     }
