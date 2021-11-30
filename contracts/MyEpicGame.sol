@@ -210,7 +210,7 @@ contract MyEpicGame is ERC721 {
         // Boss strikes back
         if (player.hp <= bigBoss.attack) {
             player.hp = 0;
-            player.lifeState = LifeState.DEAD;
+            setDeadState();
             console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
             
             emit PlayerDead(msg.sender, block.timestamp);
@@ -257,11 +257,32 @@ contract MyEpicGame is ERC721 {
         console.log('Revive of %s in progress', player.name);
 
         player.hp = player.maxHp;
-        player.lifeState = LifeState.ALIVE;
+        setAliveState();
         
         console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
         
         emit PlayerRevived(msg.sender, nftTokenIdOfPlayer);
+    }
+
+    function setWorkState() public {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+
+        player.lifeState = LifeState.WORK;
+    }
+
+    function setAliveState() public {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+
+        player.lifeState = LifeState.ALIVE;
+    }
+
+    function setDeadState() public {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+
+        player.lifeState = LifeState.DEAD;
     }
 
     function levelUp() private {
