@@ -33,6 +33,9 @@ contract MyEpicGame is ERC721 {
         uint attack;
         LifeState lifeState;
         string jobDescription;
+        uint level;
+        uint experience;
+        uint maxExperience;
     }
 
     struct BigBoss {
@@ -58,6 +61,8 @@ contract MyEpicGame is ERC721 {
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp);
     event PlayerRevived(address sender, uint tokenId);
+    event PlayerLevelUp(address sender, uint tokenId);
+
 
     constructor(
         string[] memory characterNames,
@@ -90,7 +95,10 @@ contract MyEpicGame is ERC721 {
                 maxHp: characterArguments[i],
                 attack: characterPersuasion[i],
                 lifeState: defaultstate,
-                jobDescription: defaultJob
+                jobDescription: defaultJob,
+                level: 1,
+                experience: 0,
+                maxExperience: 30
             }));
 
             CharacterAttributes memory c = defaultCharacters[i];
@@ -112,7 +120,10 @@ contract MyEpicGame is ERC721 {
             maxHp: defaultCharacters[_characterIndex].maxHp,
             attack: defaultCharacters[_characterIndex].attack,
             lifeState: defaultstate,
-            jobDescription: defaultJob
+            jobDescription: defaultJob,
+            level: 1,
+            experience: 0,
+            maxExperience: 30
         });
 
         console.log("Minted NFT with tokenId %s and characterIndex %s", newItemId, _characterIndex);
@@ -121,7 +132,7 @@ contract MyEpicGame is ERC721 {
         emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
     }
 
-    function enumToString(LifeState _state) private pure returns (string memory){
+    function lifeStateToString(LifeState _state) private pure returns (string memory){
         if(LifeState.ALIVE == _state) return "ALIVE";
         if(LifeState.WORK == _state) return "WORK";
         if(LifeState.DEAD == _state) return "DEAD";
@@ -134,7 +145,7 @@ contract MyEpicGame is ERC721 {
         string memory strArguments = Strings.toString(charAttributes.hp);
         string memory strMaxArguments = Strings.toString(charAttributes.maxHp);
         string memory strPersuasion = Strings.toString(charAttributes.attack);
-        string memory strState = enumToString(charAttributes.lifeState);
+        string memory strState = lifeStateToString(charAttributes.lifeState);
 
         string memory json = Base64.encode(
             bytes(
@@ -184,15 +195,17 @@ contract MyEpicGame is ERC721 {
 
         require (
             bigBoss.hp > 0,
-            "Error: boss must have ignorance."
+            "Error: boss already agreed your request."
         );
 
+        // Player attacks the Boss
         if (bigBoss.hp < player.attack) {
             bigBoss.hp = 0;
         } else {
             bigBoss.hp = bigBoss.hp - player.attack;
         }
 
+        // Boss strikes back
         if (player.hp < bigBoss.attack) {
             player.hp = 0;
         } else {
@@ -231,8 +244,33 @@ contract MyEpicGame is ERC721 {
         require(player.hp == 0, "Revive only possible if you are dead");
 
         player.hp = player.maxHp;
+        player.lifeState = LifeState.ALIVE;
 
         emit PlayerRevived(msg.sender, nftTokenIdOfPlayer);
+    }
+
+    function levelUp() private {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+
+        require(player.experience == player.maxExperience, "Not enough XP to get level up");
+        //reset xp to 0
+        player.experience = 0;
+        //increase max health
+        player.maxHp = player.maxHp + 25;
+        //fully heal character
+        player.hp = player.maxHp;
+        //increase attack
+        player.attack = player.attack + 25;
+        //calculate new maxXP for next level
+        player.maxExperience = calculateNextLevelUp(player.level);
+        player.level = player.level +1;
+
+        emit PlayerLevelUp(msg.sender, nftTokenIdOfPlayer);
+    }
+
+    function calculateNextLevelUp(uint _level) private pure returns (uint){
+        return (_level+(_level+1))*30;
     }
 
 }
