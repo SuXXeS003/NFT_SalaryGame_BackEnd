@@ -146,7 +146,12 @@ contract MyEpicGame is ERC721 {
         string memory strArguments = Strings.toString(charAttributes.hp);
         string memory strMaxArguments = Strings.toString(charAttributes.maxHp);
         string memory strPersuasion = Strings.toString(charAttributes.attack);
+        string memory strExperience = Strings.toString(charAttributes.experience);
+        string memory strMaxExperience = Strings.toString(charAttributes.maxExperience);
+        string memory strLevel = Strings.toString(charAttributes.level);
         string memory strState = lifeStateToString(charAttributes.lifeState);
+        string memory strJob = charAttributes.jobDescription;
+
 
         string memory json = Base64.encode(
             bytes(
@@ -158,17 +163,23 @@ contract MyEpicGame is ERC721 {
                         Strings.toString(_tokenId),
                         '", "description": "Try to get more Money", "image": "',
                         charAttributes.imageURI,
-                        '", "attributes": [ { "trait_type": "Arguments", "value": ',
+                        '", "attributes": [ { "trait_type": "Level", "value": ',
+                        strLevel,
+                        '}, { "trait_type": "Experience", "value": ',
+                        strExperience,
+                        ', "max_value":',
+                        strMaxExperience,                        
+                        '}, { "trait_type": "Arguments(hp)", "value": ',
                         strArguments,
                         ', "max_value":',
                         strMaxArguments,
-                        '}, { "trait_type": "Persuasion", "value": ',
+                        '}, { "trait_type": "Persuasion(atk)", "value": ',
                         strPersuasion,
-                        '}, { "trait_type": "Current State", "value": ',
+                        '},{ "trait_type": "Current State", "value": "',
                         strState,
-                        '}, { "trait_type": "Job title", "value": ',
-                        charAttributes.jobDescription,
-                        '} ]}'
+                        '"},{ "trait_type": "Job title", "value": "',
+                        strJob,
+                        '"} ]}'
                     )
                 )
             )
