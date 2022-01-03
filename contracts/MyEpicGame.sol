@@ -62,7 +62,7 @@ contract MyEpicGame is ERC721 {
     event AttackComplete(uint newBossHp, uint newPlayerHp);
     event PlayerRevived(address sender, uint tokenId);
     event PlayerLevelUp(address sender, uint tokenId);
-    event PlayerDead(address sender, uint256 timestamp);
+    event PlayerDead(address sender, uint256 timestamp, uint tokenId);
 
 
     constructor(
@@ -222,23 +222,20 @@ contract MyEpicGame is ERC721 {
         if (player.hp <= bigBoss.attack) {
             player.hp = 0;
             setDeadState();
-            console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
             
-            emit PlayerDead(msg.sender, block.timestamp);
-
         } else {
             player.hp = player.hp - bigBoss.attack;
         }
         console.log("Boss attacked player. New player hp: %s\n", player.hp);
+        emit AttackComplete(bigBoss.hp, player.hp);
 
+        require(player.lifeState == LifeState.ALIVE);
         player.experience = player.experience + 20;
         console.log('Check if level up is possible...');
         
         if (player.experience >= player.maxExperience) {
             levelUp();
         }
-
-        emit AttackComplete(bigBoss.hp, player.hp);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
@@ -294,6 +291,7 @@ contract MyEpicGame is ERC721 {
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
 
         player.lifeState = LifeState.DEAD;
+        emit PlayerDead(msg.sender, block.timestamp, nftTokenIdOfPlayer);
     }
 
     function levelUp() private {
@@ -314,6 +312,7 @@ contract MyEpicGame is ERC721 {
         //calculate new maxXP for next level
         player.maxExperience = calculateNextLevelUp(player.level);
         player.level = player.level +1;
+        setAliveState();
         
         console.log('You are now on level %s.', player.level);
         console.log('Level up done. Need %s XP for next level.', player.maxExperience);
