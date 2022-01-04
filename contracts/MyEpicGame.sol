@@ -62,7 +62,7 @@ contract MyEpicGame is ERC721 {
     event AttackComplete(uint newBossHp, uint newPlayerHp);
     event PlayerRevived(address sender, uint tokenId);
     event PlayerLevelUp(address sender, uint tokenId);
-    event PlayerDead(address sender, uint256 timestamp, uint tokenId);
+    event PlayerDead(address indexed sender, uint256 timestamp, uint indexed tokenId);
 
 
     constructor(
@@ -222,20 +222,23 @@ contract MyEpicGame is ERC721 {
         if (player.hp <= bigBoss.attack) {
             player.hp = 0;
             setDeadState();
-            
         } else {
             player.hp = player.hp - bigBoss.attack;
+            console.log("Boss attacked player. New player hp: %s\n", player.hp);
         }
-        console.log("Boss attacked player. New player hp: %s\n", player.hp);
-        emit AttackComplete(bigBoss.hp, player.hp);
 
-        require(player.lifeState == LifeState.ALIVE);
-        player.experience = player.experience + 20;
-        console.log('Check if level up is possible...');
+        if(player.lifeState == LifeState.ALIVE) {
+            player.experience = player.experience + 20;
+            console.log('Check if level up is possible...');
         
-        if (player.experience >= player.maxExperience) {
-            levelUp();
+            if (player.experience >= player.maxExperience) {
+                levelUp();
+            }
+        } else {
+            console.log("No XP gained, cause you died.");
         }
+
+        emit AttackComplete(bigBoss.hp, player.hp);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {

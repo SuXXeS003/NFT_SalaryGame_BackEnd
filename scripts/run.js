@@ -14,11 +14,11 @@ const main = async () => {
     );
     await gameContract.deployed();
     console.log("Contract deployed to:", gameContract.address);
-
+    
     let txn;
-
+    let receipt;
     txn = await gameContract.mintCharacterNFT(1);
-    await txn.wait();
+    receipt = await txn.wait();
 
     console.log('################################################');
     console.log('Round 1');
@@ -26,23 +26,24 @@ const main = async () => {
     console.log('################################################');
 
     txn = await gameContract.requestSalaryIncrease();
-    await txn.wait();
+
+    receipt = await txn.wait();
+
+    // try to get events
+    const events = receipt.events;
+    console.log("Deathtime:::", new Date(1000 * (events[0].args[1].toNumber())).toISOString());
+    //spits the blocktime of death in ISO: 2022-01-04T14:03:55.000Z
+
+    // Player should be dead, so we test a revive call
 
     console.log('################################################');
-    console.log('Round 2');
-    console.log('Fight');
+    console.log('Player Dead');
+    console.log('Revive');
     console.log('################################################');
 
-    txn = await gameContract.requestSalaryIncrease();
-    await txn.wait();
-
-    console.log('################################################');
-    console.log('Round 3');
-    console.log('Fight');
-    console.log('################################################');
-
-    txn = await gameContract.requestSalaryIncrease();
-    await txn.wait();
+    
+    txn = await gameContract.reviveCharacter();
+    receipt = await txn.wait();
 
     let returnedTokenUri = await gameContract.tokenURI(1);
 };
