@@ -29,10 +29,14 @@ const main = async () => {
 
     receipt = await txn.wait();
 
-    // try to get events
+    // try to get events and get death time
     const events = receipt.events;
-    console.log("Deathtime:::", new Date(1000 * (events[0].args[1].toNumber())).toISOString());
-    //spits the blocktime of death in ISO: 2022-01-04T14:03:55.000Z
+    let time = Math.round(new Date(events[0].args[1].toNumber()));
+ 
+    console.log("Deadtime:::", new Date(time*1000).toLocaleString());
+    console.log("Revivetime:::", new Date((time + 43200)*1000).toLocaleString());
+
+    //spits the blocktime of revice in ISO: 2022-01-04T14:03:55.000Z (now + 12h)
 
     // Player should be dead, so we test a revive call
 
@@ -41,7 +45,7 @@ const main = async () => {
     console.log('Revive');
     console.log('################################################');
 
-    
+    //if
     txn = await gameContract.reviveCharacter();
     receipt = await txn.wait();
 
