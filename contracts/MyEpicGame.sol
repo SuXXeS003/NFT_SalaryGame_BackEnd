@@ -59,7 +59,7 @@ contract MyEpicGame is ERC721 {
     mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
 
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
-    event AttackComplete(uint newBossHp, uint newPlayerHp);
+    event AttackComplete(uint newBossHp, uint newPlayerHp, uint newPlayerXp);
     event PlayerRevived(address sender, uint tokenId);
     event PlayerLevelUp(address sender, uint tokenId);
     event PlayerDead(address indexed sender, uint256 timestamp, uint indexed tokenId);
@@ -238,7 +238,7 @@ contract MyEpicGame is ERC721 {
             console.log("No XP gained, cause you died.");
         }
 
-        emit AttackComplete(bigBoss.hp, player.hp);
+        emit AttackComplete(bigBoss.hp, player.hp, player.experience);
     }
 
     function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
