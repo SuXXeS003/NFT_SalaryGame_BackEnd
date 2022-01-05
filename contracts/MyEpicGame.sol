@@ -61,9 +61,8 @@ contract MyEpicGame is ERC721 {
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp, uint newPlayerXp);
     event PlayerRevived(address sender, uint tokenId);
-    event PlayerLevelUp(address sender, uint tokenId);
-    event PlayerDead(address indexed sender, uint256 timestamp, uint indexed tokenId);
-
+    event PlayerLevelUp(address sender, uint tokenId, uint newLevel);
+    event PlayerDead(uint256 timestamp);
 
     constructor(
         string[] memory characterNames,
@@ -294,7 +293,7 @@ contract MyEpicGame is ERC721 {
         CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
 
         player.lifeState = LifeState.DEAD;
-        emit PlayerDead(msg.sender, block.timestamp, nftTokenIdOfPlayer);
+        emit PlayerDead(block.timestamp);
     }
 
     function levelUp() private {
@@ -321,7 +320,7 @@ contract MyEpicGame is ERC721 {
         console.log('Level up done. Need %s XP for next level.', player.maxExperience);
         console.log('Health is completly restored. Stats increased slightly.');
 
-        emit PlayerLevelUp(msg.sender, nftTokenIdOfPlayer);
+        emit PlayerLevelUp(msg.sender, nftTokenIdOfPlayer, player.level);
     }
 
     function calculateNextLevelUp(uint _level) private pure returns (uint){
