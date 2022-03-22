@@ -60,7 +60,7 @@ contract MyEpicGame is ERC721 {
 
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp, uint newPlayerXp);
-    event PlayerRevived(address sender, uint tokenId);
+    event PlayerRevived(uint newPlayerHp);
     event PlayerLevelUp(address sender, uint tokenId, uint newLevel);
     event PlayerDead(uint256 timestamp);
 
@@ -271,7 +271,7 @@ contract MyEpicGame is ERC721 {
         
         console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
         
-        emit PlayerRevived(msg.sender, nftTokenIdOfPlayer);
+        emit PlayerRevived(player.hp);
     }
 
     function setWorkState() public {
