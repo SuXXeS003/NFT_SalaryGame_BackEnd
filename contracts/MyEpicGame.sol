@@ -20,6 +20,10 @@ contract MyEpicGame is ERC721 {
     string[10] jobName = ["trainee","apprentice","temporary jobber","employee","topic responsible","team leader","lower Management","upper Management","director","executive"];
 
     LifeState constant defaultstate = LifeState.ALIVE;
+    uint constant WORK_TIME_4H = 4*60;
+    uint constant WORK_TIME_8H = 8*60;
+    uint constant WORK_TIME_12H = 12*60;
+
     string constant defaultJobStage = "junior";
     string constant defaultJobName = "trainee";
     string constant defaultJob = string(abi.encodePacked(defaultJobStage, " ",defaultJobName));
@@ -61,8 +65,10 @@ contract MyEpicGame is ERC721 {
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
     event AttackComplete(uint newBossHp, uint newPlayerHp, uint newPlayerXp);
     event PlayerRevived(uint newPlayerHp);
-    event PlayerLevelUp(address sender, uint tokenId, uint newLevel);
+    event PlayerLevelUp(address sender, uint newLevel);
     event PlayerDead(uint256 timestamp);
+    event PlayerStartWorking(uint256 timestamp);
+    event PlayerEndWorking(uint newPlayerXp);
 
     constructor(
         string[] memory characterNames,
@@ -186,16 +192,11 @@ contract MyEpicGame is ERC721 {
 
         console.log('JSON:', json);
 
-        string memory output = string(
-            abi.encodePacked("data:application/json;base64,", json)
-        );
-
-        return output;
+        return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
     function requestSalaryIncrease() public {
-        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
-        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        CharacterAttributes memory player = getPlayer();
         console.log("\nPlayer with character %s is about to request.", player.name);
         console.log("%s is listening", bigBoss.name);
 
@@ -255,13 +256,18 @@ contract MyEpicGame is ERC721 {
         return defaultCharacters;
     }
 
+    function getPlayer() public view returns (CharacterAttributes memory) {
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        return nftHolderAttributes[nftTokenIdOfPlayer];
+
+    }
+
     function getBigBoss() public view returns (BigBoss memory) {
         return bigBoss;
     }
 
     function reviveCharacter() public {
-        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
-        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        CharacterAttributes memory player = getPlayer();
         
         require(player.hp == 0, "Revive only possible if you are dead");
         console.log('Revive of %s in progress', player.name);
@@ -274,31 +280,71 @@ contract MyEpicGame is ERC721 {
         emit PlayerRevived(player.hp);
     }
 
-    function setWorkState() public {
-        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
-        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+    function startWorking() public {
+        CharacterAttributes memory player = getPlayer();
+
+        require(player.hp > 0, "You must be alive to work");
+        console.log("Work is starting for %s", player.name);
+        setWorkState();
+        console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
+
+        emit PlayerStartWorking(block.timestamp);
+    }
+
+    function endWorking(uint workStartTime) public {
+        CharacterAttributes memory player = getPlayer();
+
+        uint timeDiff = block.timestamp - workStartTime;
+        uint newXp = 0;
+
+        require(player.lifeState == LifeState.WORK, "You must be working to end work");
+        console.log("Work is ending for %s", player.name);
+        setAliveState();
+        console.log('Player is in lifestate %s', lifeStateToString(player.lifeState));
+
+        require( timeDiff >= WORK_TIME_4H, "You must work for at least 4 hours");
+        newXp = player.experience / 8;
+        console.log('Player gained %s XP', player.experience);
+
+        require(timeDiff >= WORK_TIME_8H, "You must work for at least 8 hours");
+        newXp = player.experience / 8;
+        console.log('Player gained %s XP', player.experience);
+
+        require(timeDiff >= WORK_TIME_12H, "You must work for at least 12 hours");
+        newXp = player.experience / 8;
+        console.log('Player gained %s XP', player.experience);
+
+        console.log('New player experience: %s', player.experience);
+        player.experience = player.experience + newXp;
+
+        if (player.experience >= player.maxExperience) {
+            levelUp();
+        }
+
+        emit PlayerEndWorking(player.experience);
+    }
+
+    function setWorkState() view public {
+        CharacterAttributes memory player = getPlayer();
 
         player.lifeState = LifeState.WORK;
     }
 
-    function setAliveState() public {
-        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
-        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+    function setAliveState() view public {
+        CharacterAttributes memory player = getPlayer();
 
         player.lifeState = LifeState.ALIVE;
     }
 
     function setDeadState() public {
-        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
-        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        CharacterAttributes memory player = getPlayer();
 
         player.lifeState = LifeState.DEAD;
         emit PlayerDead(block.timestamp);
     }
 
     function levelUp() private {
-        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
-        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        CharacterAttributes memory player = getPlayer();
 
         require(player.experience >= player.maxExperience, "Not enough XP to get level up");
         console.log('Level up in progress!');
@@ -320,7 +366,7 @@ contract MyEpicGame is ERC721 {
         console.log('Level up done. Need %s XP for next level.', player.maxExperience);
         console.log('Health is completly restored. Stats increased slightly.');
 
-        emit PlayerLevelUp(msg.sender, nftTokenIdOfPlayer, player.level);
+        emit PlayerLevelUp(msg.sender, player.level);
     }
 
     function calculateNextLevelUp(uint _level) private pure returns (uint){
